@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Insurgency Games</title>
+    <style>
+      body {
+    font-family: Arial, sans-serif;
+    background-color: #ddd;
+    text-align: center;
+}
+header {
+    background-color: #333;
+    color: white;
+    padding: 10px 0;
+}
+#credits {
+    margin-top: 10px;
+}
+.bjCards {
+    margin: 20px;
+    border: 1px solid #333;
+    background-color: #fff;
+    padding: 10px;
+    display: inline-block;
+}
+
+#blackjackGame {
+    margin-top: 20px;
+}
+#roulette {
+    margin-top: 20px;
+}
+
+#rouletteWheel {
+    width: 200px; /* Adjust size as needed */
+    height: 200px; /* Make height and width equal for a circle */
+    border-radius: 50%; /* This creates the circular shape */
+    border: 5px solid #333; /* Adjust styling as needed */
+    background-color: #eee; /* Adjust color as needed */
+    margin: 20px auto; /* Center the wheel */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+}
+
+/* Adjust the keyframe animation */
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(3600deg); } /* Spin multiple times */
+}
+
+
+#rouletteWheel {
+    background-image: url('https://cdn5.vectorstock.com/i/1000x1000/72/59/american-roulette-wheel-vector-13367259.jpg');
+    background-size: cover;
+    /* Other styles remain the same */
+}
+#indicator {
+    width: 0;
+    height: 0;
+    border-left: 10px solid transparent;
+    border-right: 10px solid transparent;
+    border-bottom: 20px solid black; /* Adjust color as needed */
+    position: absolute;
+    top: -20px; /* Adjust position as needed */
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 10;
+}
+.pokerHand {
+    margin: 10px;
+    padding: 5px;
+    border: 1px solid #333;
+    background-color: #fff;
+    display: inline-block;
+}
+
+#poker {
+    margin-top: 20px;
+}
+
+
+</style>
+</head>
+<body>
+    <header>
+        <h1>Insurgency Sandstorm Games</h1>
+        <button id="addCredits">Add Credits</button>
+        <div id="credits">Credits: 1000</div>
+    </header>
+
+    <main>
+        <section id="blackjack">
+            <h2>Insurgency Blackjack</h2>
+            <div id="blackjackGame">
+    <button id="bjDealButton">Deal</button>
+    <button id="bjHitButton">Hit</button>
+    <button id="bjStandButton">Stand</button>
+<div id="bjPlayerCards" class="bjCards"></div>
+<div id="playerBlackjackResult"></div>
+<div id="bjDealerCards" class="bjCards"></div>
+<div id="dealerBlackjackResult"></div>
+<div id="bjResult">Result goes here</div>
+
+</div>
+
+        </section>
+<div id="rouletteContainer" style="position: relative;">
+    <h2>Insurgency Roulette</h2>
+    <input type="number" id="betAmount" placeholder="Bet Amount">
+    <input type="number" id="numberBet" min="0" max="36" placeholder="Number (0-36)">
+    <select id="colorBet">
+        <option value="">Select Color</option>
+        <option value="red">Red</option>
+        <option value="black">Black</option>
+    </select>
+    <select id="evenOddBet">
+        <option value="">Even or Odd</option>
+        <option value="even">Even</option>
+        <option value="odd">Odd</option>
+    </select>
+    <button id="placeBet">Place Bet</button>
+    <div id="rouletteResult"></div>
+    <div id="rouletteWheel"></div>
+     <div id="indicator"></div>
+</section>
+    <section id="poker">
+        <h2>Insurgency Poker</h2>
+        <input type="number" id="pokerBetAmount" placeholder="Bet Amount">
+        <button id="dealPokerHand">Deal Hand</button>
+        <div id="pokerPlayerHand" class="pokerHand"></div>
+        <button id="drawCards">Draw Cards</button>
+        <div id="pokerResult"></div>
+    </section>
+
+
+
+    </main>
+
+    <script>
+      let credits = 1000;
+
+document.getElementById('addCredits').addEventListener('click', () => {
+    credits += 1000;
+    updateCreditsDisplay();
+});
+
+function updateCreditsDisplay() {
+    document.getElementById('credits').innerText = `Credits: ${credits}`;
+}
+
+let bjPlayer = { score: 0, div: '#bjPlayerCards', scoreSpan: '#playerBlackjackResult' };
+let bjDealer = { score: 0, div: '#bjDealerCards', scoreSpan: '#dealerBlackjackResult' };
+let playerCards = [];
+let dealerCards = [];
+
+document.getElementById('bjDealButton').addEventListener('click', bjDeal);
+document.getElementById('bjHitButton').addEventListener('click', bjHit);
+document.getElementById('bjStandButton').addEventListener('click', bjStand);
+
+
+function bjDeal() {
+    if (credits >= 100) { // Assuming each game costs 100 credits
+        credits -= 100;
+        updateCreditsDisplay();
+    createDeck();
+
+    playerCards = [deck.pop(), deck.pop()];
+    dealerCards = [deck.pop(), deck.pop()];
+
+    document.getElementById('bjPlayerCards').innerText = `Player Cards: ${playerCards.join(', ')}`;
+    document.getElementById('bjDealerCards').innerText = `Dealer Cards: ${dealerCards.join(', ')}`;
+    updateScores();
+    } else {
+        document.getElementById('bjResult').innerText = 'Not enough credits!';
+    }
+}
+
+function bjHit() {
+    if (getScore(playerCards) < 21) {
+        playerCards.push(deck.pop());
+        document.getElementById('bjPlayerCards').innerText = `Player Cards: ${playerCards.join(', ')}`;
+        updateScores();
+    }
+
+    if (getScore(playerCards) > 21) {
+        document.getElementById('bjResult').innerText = 'Player busts!';
+    }
+}
+
+function bjStand() {
+    while (getScore(dealerCards) < 17) {
+        dealerCards.push(deck.pop());
+    }
+    document.getElementById('bjDealerCards').innerText = `Dealer Cards: ${dealerCards.join(', ')}`;
+    determineWinner();
+    updateScores();
+}
+
+
+let deck = [];
+
+function createDeck() {
+    const suits = ['Hearts', 'Diamonds', 'Clubs', 'Spades'];
+    const values = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A'];
+    
+    deck = [];
+
+    for (let suit of suits) {
+        for (let value of values) {
+            deck.push(value + ' of ' + suit);
+        }
+    }
+
+    shuffleDeck();
+}
+
+function shuffleDeck() {
+    for (let i = deck.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [deck[i], deck[j]] = [deck[j], deck[i]];
+    }
+}
+function getScore(cards) {
+    let score = 0;
+    let hasAce = false;
+
+    for (let card of cards) {
+        let value = card.split(' ')[0];
+        if (isNaN(value)) {
+            if (value === 'A') {
+                hasAce = true;
+                score += 11;
+            } else {
+                score += 10; // For J, Q, K
+            }
+        } else {
+            score += parseInt(value);
+        }
+    }
+
+    if (hasAce && score > 21) {
+        score -= 10;
+    }
+
+    return score;
+}
+function updateScores() {
+    document.getElementById('playerBlackjackResult').innerText = `Player Score: ${getScore(playerCards)}`;
+    document.getElementById('dealerBlackjackResult').innerText = `Dealer Score: ${getScore(dealerCards)}`;
+}
+
+function determineWinner() {
+    let playerScore = getScore(playerCards);
+    let dealerScore = getScore(dealerCards);
+
+    if (playerScore > 21) {
+        document.getElementById('bjResult').innerText = 'Player busts!';
+    } else if (dealerScore > 21 || playerScore > dealerScore) {
+        document.getElementById('bjResult').innerText = 'Player wins!';
+    } else if (playerScore < dealerScore) {
+        document.getElementById('bjResult').innerText = 'Dealer wins!';
+    } else {
+        document.getElementById('bjResult').innerText = 'Tie!';
+    }
+    if (playerScore <= 21 && (dealerScore > 21 || playerScore > dealerScore)) {
+        credits += 200; // Reward for winning
+    }
+    updateCreditsDisplay();
+}
+
+let rouletteBet = 0;
+
+document.getElementById('placeBet').addEventListener('click', placeRouletteBet);
+
+function placeRouletteBet() {
+    const betAmount = parseInt(document.getElementById('betAmount').value);
+    const numberBet = parseInt(document.getElementById('numberBet').value);
+    const colorBet = document.getElementById('colorBet').value;
+    const evenOddBet = document.getElementById('evenOddBet').value;
+
+    if (isNaN(betAmount) || betAmount <= 0 || betAmount > credits) {
+        alert('Invalid bet amount.');
+        return;
+    }
+
+    credits -= betAmount;
+    updateCreditsDisplay();
+
+    const resultNumber = Math.floor(Math.random() * 37); // 0 to 36
+    const resultColor = getResultColor(resultNumber);
+    const isEven = resultNumber % 2 === 0;
+
+    let winAmount = 0;
+    if (!isNaN(numberBet) && resultNumber === numberBet) {
+        winAmount += betAmount * 36;
+    }
+    if (colorBet === resultColor) {
+        winAmount += betAmount * 2;
+    }
+    if ((evenOddBet === 'even' && isEven) || (evenOddBet === 'odd' && !isEven)) {
+        winAmount += betAmount * 2;
+    }
+
+    credits += winAmount;
+    updateCreditsDisplay();
+
+    // Display the results
+}
+
+function getResultColor(number) {
+    // Assuming 0 is green, 1-10 are alternately red and black, etc.
+    // Define the logic to determine the color based on the number
+}
+
+function spinRouletteWheel() {
+    const resultNumber = Math.floor(Math.random() * 37); // 0 to 36
+    document.getElementById('rouletteResult').innerText = `Roulette landed on ${resultNumber}`;
+
+    if (resultNumber === rouletteBet) {
+        credits += 3600; // Reward for winning (36:1 payout)
+        document.getElementById('rouletteResult').innerText += ' - You win!';
+    } else {
+        document.getElementById('rouletteResult').innerText += ' - You lose!';
+    }
+
+    updateCreditsDisplay();
+}
+function spinRouletteWheel() {
+    const wheel = document.getElementById('rouletteWheel');
+
+    // Reset the animation
+    wheel.style.animation = 'none';
+    wheel.offsetHeight; // Trigger reflow
+    wheel.style.animation = 'spin 2s linear';
+
+    setTimeout(() => {
+        // Logic to stop the wheel and display the result
+    }, 2000); // Duration of the spin
+}
+
+let pokerDeck = [];
+let playerHand = [];
+
+function createPokerDeck() {
+    const suits = ['Hearts', 'Diamonds', 'Clubs', 'Spades'];
+    const values = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A'];
+    
+    pokerDeck = [];
+
+    for (let suit of suits) {
+        for (let value of values) {
+            pokerDeck.push({suit, value});
+        }
+    }
+
+    shufflePokerDeck();
+}
+
+function shufflePokerDeck() {
+    for (let i = pokerDeck.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [pokerDeck[i], pokerDeck[j]] = [pokerDeck[j], pokerDeck[i]];
+    }
+}
+
+function updateCreditsDisplay() {
+    document.getElementById('credits').innerText = credits;
+}
+
+document.getElementById('dealPokerHand').addEventListener('click', function() {
+    betAmount = parseInt(document.getElementById('pokerBetAmount').value);
+    if (isNaN(betAmount) || betAmount <= 0 || betAmount > credits) {
+        alert('Invalid bet amount.');
+        return;
+    }
+
+    credits -= betAmount;
+    updateCreditsDisplay();
+    dealPokerHand();
+});
+
+document.getElementById('drawCards').addEventListener('click', function() {
+    drawPokerCards();
+    finalizeHand();
+});
+
+function dealPokerHand() {
+    createPokerDeck();
+    playerHand = pokerDeck.splice(0, 5);
+    displayPokerHand();
+}
+
+function drawPokerCards() {
+    playerHand = pokerDeck.splice(0, 5);
+    displayPokerHand();
+}
+
+function displayPokerHand() {
+    const handDisplay = playerHand.map(card => `${card.value} of ${card.suit}`).join(', ');
+    document.getElementById('pokerPlayerHand').innerText = `Your Hand: ${handDisplay}`;
+}
+
+let betAmount = 0; // Global variable to track the current bet
+
+function evaluateHand(hand) {
+    let values = hand.map(card => card.value);
+    let suits = hand.map(card => card.suit);
+    let valueCounts = values.reduce((acc, value) => {
+        acc[value] = (acc[value] || 0) + 1;
+        return acc;
+    }, {});
+
+    // Count suits for flush
+    let suitCounts = suits.reduce((acc, suit) => {
+        acc[suit] = (acc[suit] || 0) + 1;
+        return acc;
+    }, {});
+
+    let counts = Object.values(valueCounts);
+
+    // Check for different hands
+    if (counts.includes(4)) return "Four of a Kind";
+    if (counts.includes(3) && counts.includes(2)) return "Full House";
+    if (Object.values(suitCounts).includes(5)) return "Flush";
+    if (isStraight(values)) return "Straight";
+    if (counts.includes(3)) return "Three of a Kind";
+    if (counts.filter(count => count === 2).length === 2) return "Two Pair";
+    if (counts.includes(2)) return "Pair";
+
+    return "No Winning Hand";
+}
+
+function isStraight(values) {
+    // Convert values to numbers for easier comparison
+    let valuesInNumbers = values.map(value => {
+        if (value === 'A') return 1;
+        if (value === 'J') return 11;
+        if (value === 'Q') return 12;
+        if (value === 'K') return 13;
+        return parseInt(value);
+    });
+
+    valuesInNumbers.sort((a, b) => a - b);
+
+    // Check for Ace-low straight
+    let isAceLowStraight = valuesInNumbers.slice(0, 4).every((value, i, arr) => value === arr[0] + i) && valuesInNumbers.includes(13);
+
+    return valuesInNumbers.every((value, i, arr) => i === 0 || value === arr[i - 1] + 1) || isAceLowStraight;
+}
+
+function finalizeHand() {
+    let result = evaluateHand(playerHand);
+    document.getElementById('pokerResult').innerText = `Result: ${result}`;
+    
+    // Define the winnings based on the hand
+    let winnings = 0;
+    switch (result) {
+        case "Royal Flush":
+            winnings = betAmount * 100;
+            break;
+        case "Straight Flush":
+            winnings = betAmount * 50;
+            break;
+        case "Four of a Kind":
+            winnings = betAmount * 25;
+            break;
+        case "Full House":
+            winnings = betAmount * 10;
+            break;
+        case "Flush":
+            winnings = betAmount * 6;
+            break;
+        case "Straight":
+            winnings = betAmount * 4;
+            break;
+        case "Three of a Kind":
+            winnings = betAmount * 3;
+            break;
+        case "Two Pair":
+            winnings = betAmount * 2;
+            break;
+        case "Pair":
+            winnings = betAmount;
+            break;
+        default:
+            winnings = 0; // No winnings for no winning hand
+    }
+
+    credits += winnings;
+    updateCreditsDisplay();
+}
+
+updateCreditsDisplay();
+
+
+    </script>
+</body>
+</html>
